@@ -10,7 +10,7 @@ import statistics
 import glob
 import tqdm
 
-listOfIncludedYears = list(range(2009,2021))
+listOfIncludedYears = [2009,2016,2017,2018,2019,2020]
 dataFilePath = 'Data/lab_data/req1512_lab_year.csv'
 
 for eachYear in listOfIncludedYears:
