@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# This EDA file is to derive basic statistics about each of the 300 lab components. Include total count, accepted counts, mean, and standard deviation.
+
 import pandas as pd
 import numpy as np
 import math
