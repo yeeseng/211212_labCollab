@@ -15,10 +15,12 @@ dataFilePath = 'Data/lab_data/req1512_lab_year.csv'
 
 for eachYear in listOfIncludedYears:
     print('working on:',eachYear)
-    filePath = dataFilePath.replace('year',str(eachYear))
-    workingDataFrame = pd.read_csv(filePath)
-                                   #['MRN', 'PAT_ENC_CSN_ID', 'ORDER_PROC_ID', 'ORDERING_DATE', 'COMMON_NAME',
-                                   #         'COMPONENT_NAME', 'BASE_NAME', 'ORD_VALUE', 'REFERENCE_UNIT']
+
+    templateFilePath = dataFilePath.replace('year', '2018')
+    templateDataFrame = pd.read_csv(templateFilePath)
+
+    filePath = dataFilePath.replace('year', str(eachYear))
+    workingDataFrame = pd.read_csv(filePath, usecols=templateDataFrame.columns.to_list())
     workingDataFrame['MRN'] = workingDataFrame['MRN'].astype('str')
     thisListOfMRNs = workingDataFrame['MRN'].unique().tolist()
     saveFilePath = 'Data/lab_data_patientLvl/mrn_year.csv'
