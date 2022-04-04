@@ -41,17 +41,26 @@ def singleLabComponentReel(df, labComp='WBC'):
     thisDF = df[df['COMMON_NAME']==labComp]
     labREEL = np.zeros(200)
     for eachIndex in range(200):
-        list = df[df['REEL_FRAME']==eachIndex].ORD_VALUE.values
-        print(list)
-    return
+        listOfLabs = df[df['REEL_FRAME']==eachIndex].ORD_VALUE.values
+        listOfLabs = [float(eachItem) for eachItem in listOfLabs]
+        if len(listOfLabs)>0:
+            labREEL[eachIndex] = statistics.mean(listOfLabs)
+        elif eachIndex ==0:
+            labREEL[eachIndex]=0
+        else:
+            labREEL[eachIndex]=labREEL[eachIndex-1]
+    return labREEL
 
 if __name__ == "__main__":
     listOfFileNames = [eachItem.split('/')[-1][:-3] for eachItem in glob.glob('Data/lab_data_patientLvl/*.csv')]
     listOfIDs = list(set([eachItem.split('_')[0] for eachItem in listOfFileNames]))
+    listOfIDs.sort(reverse=True)
 
     csvFilepathTemplate = 'Data/lab_data_patientLvl/id_*.csv'
 
-    for eachID in listOfIDs[1:2]:
+    print(len(listOfIDs))
+    for eachID in listOfIDs[4:5]:
+        print(eachID)
         thisPath = csvFilepathTemplate.replace('id',eachID)
         thisPathList = glob.glob(thisPath)
         thisListOfDataFrames = [pd.read_csv(eachItem, usecols=['MRN', 'PAT_ENC_CSN_ID', 'ORDER_PROC_ID', 'PROC_NAME', 'RESULT_DATE', 'COMMON_NAME',
@@ -63,6 +72,7 @@ if __name__ == "__main__":
         idDataFrame = lab_clean(idDataFrame)
         labCompList = ['HEMATOCRIT']
         for eachItem in labCompList:
-            singleLabComponentReel(idDataFrame, labComp=eachItem)
+            labReel = singleLabComponentReel(idDataFrame, labComp=eachItem)
+            print(labReel)
 
         #print(thisListOfDataFrames)
