@@ -89,7 +89,7 @@ if __name__ == "__main__":
     print('total number of patient IDs:', len(listOfIDs))
     print('Number of uncompleted reels:', len(idsOfCompletedReels))
     listOfIDs = [eachItem for eachItem in listOfIDs if eachItem not in idsOfCompletedReels]
-    print('Number of uncompleted reels:', len(listOfIDs))
+    print('Number of completed reels:', len(listOfIDs))
     listOfIDs.sort(reverse=True)
 
     labComponentsDF = pd.read_csv('Data/52_lab_components_jw_04232022.csv')
@@ -112,7 +112,7 @@ if __name__ == "__main__":
             idDataFrame = pd.concat(thisListOfDataFrames)
 
             if len(idDataFrame)>0:
-                idDataFrame = lab_clean(idDataFrame, use_ref_ranges=False)
+                idDataFrame = lab_clean(idDataFrame, use_ref_ranges=True)
 
             #labCompList = ['CREATININE']
             labReelList = []

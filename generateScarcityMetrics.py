@@ -10,8 +10,8 @@ if __name__ == "__main__":
     for eachFile in listOfFiles:
         ptID = eachFile.split('/')[-1][:-4]
         thisNpArray = np.load(eachFile)
-        thisNpArray = thisNpArray != 0
+        thisNpArray = np.logical_or(thisNpArray<-0.001, thisNpArray>0.001)
         sum = thisNpArray.sum()
-        percent = sum/(312*52)
+        percent = sum/(380*52)
         with open('Data/scarcityMetric.txt', 'a') as file:
             file.write(ptID + ',' + str(sum) + ',' + str(percent) + '\n')
