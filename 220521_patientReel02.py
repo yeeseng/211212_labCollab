@@ -11,7 +11,7 @@ def parseResultTime(resultTime):
     return(thisDate)
 
 def calcReelFrame(resultDateString, referenceTime=datetime(2008, 9, 30)):
-    return parseResultTime(resultDateString)-referenceTime
+    return (parseResultTime(resultDateString)-referenceTime).days//14
 
 def normalizeHelper(ORD_VALUE, FINAL_REF_LOW, FINAL_REF_HIGH):
     normalizedValue = 0
@@ -34,7 +34,7 @@ def lab_clean(df, use_ref_ranges=True):
     # Restrict to non-hospital through inner join
     #df = pd.merge(df, enc['pat_enc_csn_id'], on='pat_enc_csn_id', how='inner')
     # Restrict to >9/2008
-    df['REEL_FRAME'] = df.apply(lambda x: calcReelFrame(x['RESULT_DATE']).days//14, axis=1)
+    df['REEL_FRAME'] = df.apply(lambda x: calcReelFrame(x['RESULT_DATE']), axis=1)
     df = df[df['REEL_FRAME'] > 0]
 
     # Remove external orders/results
@@ -87,18 +87,27 @@ if __name__ == "__main__":
     listOfFileNames = [eachItem.split('/')[-1][:-3] for eachItem in glob.glob('Data/lab_data_patientLvl/*.csv')]
     listOfIDs = list(set([eachItem.split('_')[0] for eachItem in listOfFileNames]))
     print('total number of patient IDs:', len(listOfIDs))
-    print('Number of uncompleted reels:', len(idsOfCompletedReels))
+    print('Number of completed reels:', len(idsOfCompletedReels))
     listOfIDs = [eachItem for eachItem in listOfIDs if eachItem not in idsOfCompletedReels]
-    print('Number of completed reels:', len(listOfIDs))
+    print('Number of uncompleted reels:', len(listOfIDs))
     listOfIDs.sort(reverse=True)
 
     labComponentsDF = pd.read_csv('Data/52_lab_components_jw_04232022.csv')
+    '''
+    # Codes to generate labGroupList, once created, use the saved version
     labGroupList = labComponentsDF['group name'].unique()
+    for eachLabGroup in labGroupList:
+        with open('Data/labGroupList.txt', 'a') as file:
+            file.write(eachLabGroup + '\n')
+    '''
+
+    with open('Data/labGroupList.txt') as f:
+        labGroupList = f.read().splitlines()
+    print(labGroupList)
 
     csvFilepathTemplate = 'Data/lab_data_patientLvl/id_*.csv'
     npySavePath = 'Data/lab_data_patientReels/id.npy'
 
-    #print(len(listOfIDs))
     for eachID in tqdm.tqdm(listOfIDs):
         try:
             #print(eachID)
