@@ -13,58 +13,45 @@ class labCollabDataset(BaseDataset):
             self,
             dataframe=None,
             patientList=None,
-            transform_mask=None,
             args=None
     ):
         self.dataframe = dataframe
-        self.vertBodyList = vertBodyList
-        self.args = args
-        self.resizeTransformPadCrop = monai.transforms.ResizeWithPadOrCrop([args.imageSize, args.imageSize, args.numSlices])
-        self.augmentation_both = augmentation_both
-        self.augmentation_img = augmentation_img
-        self.transform_mask = transform_mask
+        self.patientList = dataframe['mrn'].to_list()
 
     def __getitem__(self, i):
-        thisVertBody = self.vertBodyList[i]
-        thisStudyID = thisVertBody.split('_')[0]
-        thisCervicalLvl = int(thisVertBody[-1])
-
-        fxMask_exists = torch.tensor(self.dataframe.loc[thisStudyID].loc['fxMask_exists'], dtype=torch.float)
-        bb_exists = torch.tensor(self.dataframe.loc[thisStudyID].loc['bb_exists'], dtype=torch.float)
-
-        target = np.array(self.dataframe.loc[thisStudyID].iloc[thisCervicalLvl:thisCervicalLvl+1].tolist()).astype(float)
-
-        thisfilePath = self.args.imgFilePath.replace('vertBody', thisVertBody)
-        imgVol = np.load(thisfilePath)['arr_0']
-        imgVol = self.resizeTransformPadCrop(imgVol)
-
-        if bb_exists:
-            thisSegFilePath = self.args.segFilePath_fx.replace('vertBody', thisVertBody)
-            segVol_fx = np.load(thisSegFilePath)['arr_0']
-            segVol_fx = self.resizeTransformPadCrop(segVol_fx)
-        else:
-            segVol_fx = np.zeros((1, 256, 256, 256))
-
-        combinedVol = np.concatenate((imgVol, segVol_fx), axis=0)
-
-        # apply augmentations
-        if self.augmentation_both:
-            combinedVol = self.augmentation_both(combinedVol)
-        else:
-            combinedVol = torch.tensor(combinedVol)  # monai segmentation turns numpy into tensor
-
-        imgVol = combinedVol[0:1, :, :, :]
-        segVol_fx = combinedVol[-1:, :, :, :] > 0.05
-
-        if self.augmentation_img:
-            imgVol = self.augmentation_img(imgVol)
-
-        segVol_fx = self.transform_mask(segVol_fx)
-
-        return imgVol.type(torch.FloatTensor), segVol_fx.type(torch.FloatTensor), target, fxMask_exists, bb_exists, thisVertBody
+        thisPatientMRN = self.patientList[i]
+        patientReel = np.load('Data/lab_data_patientReels/'+str(thisPatientMRN)+'.npy')
+        return patientReel
 
     def __len__(self):
-        return len(self.vertBodyList)
+        return len(self.patientList)
 
 if __name__ == "__main__":
     dataDF = pd.read_csv('Data/Fe_def_outcome_cleanedAndStratified_YN.csv')
+    dataDF = dataDF[dataDF['blacklist']==False]
+
+    thisDataset = labCollabDataset(dataframe=dataDF)
+    print(thisDataset.__getitem__(3))
+    '''
+    #listOfFiles = glob.glob('Data/lab_data_patientReels/*')
+    #print(len(listOfFiles))
+    #print(listOfFiles[:10])
+
+    blacklist = []
+    for eachItem in thisDataset:
+        try:
+            filename = 'Data/lab_data_patientReels/'+str(eachItem)+'.csv'
+            patientReelDF = pd.read_csv(filename)
+            #patientReelDF = pd.read_csv('Data/lab_data_patientReels/'+eachItem+'.csv')
+        except:
+            blacklist.append(eachItem)
+
+    print('number of study patients:', len(thisDataset))
+    print('number in blacklist:', len(blacklist))
+    #with open("outputs/blacklist.txt", "w") as output:
+    #    output.write(str(blacklist))
+
+    dataDF['blacklist'] = dataDF.apply(lambda x: True if x.mrn in blacklist else False, axis=1)
+    print(dataDF.head())
+    dataDF.to_csv('Data/Fe_def_outcome_cleanedAndStratified_YN.csv')
+    '''
