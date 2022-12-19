@@ -49,9 +49,8 @@ if __name__ == "__main__":
     print(dataDF.head())
 
     thisDataset = labCollabDataset(dataframe=dataDF)
-    print(thisDataset.__getitem__(3))
+    print(thisDataset.__getitem__(3)[0].shape)
 
-    print()
     '''
     #listOfFiles = glob.glob('Data/lab_data_patientReels/*')
     #print(len(listOfFiles))
