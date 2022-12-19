@@ -1,0 +1,52 @@
+Iron Sat
+Lyc Pct
+Rct Lyc Abs
+Alb
+AP
+ALT
+AG
+AST
+Band Pct
+Baso Pct
+Baso Abs
+Tbili
+Blast Pct
+BUN
+Ca
+Cl
+CO2
+Cr
+Eos Pct
+Eos Abs
+RBC
+Ferritin
+Glucose
+Gran Abs
+Hct
+Hb
+TIBC
+UIBC
+Fe
+Lyc Abs
+MCH
+MCHC
+MCV
+MPV
+Meta Abs
+Meta Pct
+Mono PCt
+Mono Abs
+Myelo Abs
+Myelo Pct
+PMN Pct
+PMN Abs
+NRBC Pct
+NRBC Abs
+Plt
+K
+Prot
+RDW
+Retic Abs
+Retic Pct
+Na
+WBC
