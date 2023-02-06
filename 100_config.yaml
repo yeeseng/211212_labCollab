@@ -1,0 +1,10 @@
+# general configs
+projectName : labCollab
+tag : basicModel
+# run specific configs
+lr : 5.0e-5
+fold : 0
+num_gpus : 1
+batch_size : 6
+max_epochs : 100
+num_workers : 5

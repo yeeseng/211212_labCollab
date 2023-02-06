@@ -6,6 +6,8 @@ import glob
 import tqdm
 from datetime import datetime, timedelta
 import random
+import yaml
+import argparse
 
 # PyTorch Modules
 from torch.utils.data import Dataset as BaseDataset
@@ -21,8 +23,11 @@ from torchvision import transforms
 import torchvision.transforms as transforms
 import torchvision.datasets as dsets
 
+import torchmetrics
+import pytorch_lightning as pl
+
 class BiGRUver2(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+    def __init__(self, input_size, hidden_size, num_layers):
         super(BiGRUver2, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -56,11 +61,10 @@ class labCollabLM(pl.LightningModule):
     def __init__(self, params):
         super().__init__()
         self.save_hyperparameters(params)
-        self.mainModel = BiGRUver2()
-        #EfficientNet3D.from_name("efficientnet-b2", override_params={'num_classes': 8}, in_channels=2)
+        self.mainModel = BiGRUver2(input_size=52, hidden_size=32, num_layers=1)
 
         #Metrics
-        self.accuracy = torchmetrics.Accuracy()
+        self.accuracy = torchmetrics.Accuracy(task='binary')
         self.learning_rate = self.hparams.lr
 
     def forward(self, x):
@@ -154,14 +158,11 @@ class labCollabDM(pl.LightningDataModule):
         # get train list
         trainDF = self.dataDF[self.dataDF['fold'] != self.args.fold]
         self.trainList = trainDF.index.to_list()
-        self.trainList = [eachStudyNum for eachStudyNum in self.trainList if eachStudyNum not in self.blacklist]
 
         # get valid list
         validDF = self.dataDF[self.dataDF['fold'] == self.args.fold]
         self.validList = validDF.index.to_list()
-        self.validList = [eachStudyNum for eachStudyNum in self.validList if eachStudyNum not in self.blacklist]
 
-        trainAugmentation = get_training_augmentation()
         self.trainDataset = labCollabDataset(dataframe=self.dataDF, patientList=self.trainList, args=args)
         self.validDataset = labCollabDataset(dataframe=self.dataDF, patientList=self.validList, args=args)
 
@@ -182,7 +183,7 @@ class labCollabDM(pl.LightningDataModule):
 if __name__ == "__main__":
     print(pl.__version__)
     # load config file
-    with open('200-defaultConfig.yaml') as file:
+    with open('100_config.yaml') as file:
         defaultConfigDict = yaml.safe_load(file)
 
     parser = argparse.ArgumentParser()
@@ -192,30 +193,26 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    '''
     # setting up
     timeStamp = datetime.now().strftime('%y%m%d%H%M')
     runName = timeStamp + '_' + args.tag + '_cv' + str(args.fold)
+    print(runName)
 
-    blacklist = []
-    # blacklist = ['1.2.826.0.1.3680043.9447', '1.2.826.0.1.3680043.28990','1.2.826.0.1.3680043.28606','1.2.826.0.1.3680043.6714','1.2.826.0.1.3680043.31328','1.2.826.0.1.3680043.11192','1.2.826.0.1.3680043.24281']
+    labCollabLightningModule = labCollabLM(args)
+    labCollabDataModule = labCollabDM(args=args)
 
-    myRSNAcspineLightningModule = RSNAcspineLightningModule(args)
-    myRSNAcspineDataModule = RSNAcspineDataModule(blacklist=blacklist, args=args)
-
-    wandb_logger = WandbLogger(project=args.projectName, name=timeStamp, tags=[args.tag])
-    #wandb_logger = None
+    #wandb_logger = WandbLogger(project=args.projectName, name=timeStamp, tags=[args.tag])
+    wandb_logger = None
 
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints/' + runName + '/',
                                           filename=runName + '-{epoch}-{valid_loss_total:.4f}',
                                           monitor='valid_loss_total',
                                           save_top_k=100,
                                           mode='min')
-    # lr_monitor = LearningRateMonitor(logging_interval='epoch')
+
     trainer = pl.Trainer(logger=wandb_logger, log_every_n_steps=10, callbacks=[checkpoint_callback],
                          accumulate_grad_batches=4,
                          accelerator='gpu', devices=args.num_gpus, strategy='ddp_find_unused_parameters_false', precision = 16,
                          #accelerator='ddp', plugins=DDPPlugin(find_unused_parameters=False)],
                          max_epochs=args.max_epochs, num_sanity_val_steps=10)
     trainer.fit(myRSNAcspineLightningModule, myRSNAcspineDataModule)
-    '''
