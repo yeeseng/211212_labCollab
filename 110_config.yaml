@@ -1,0 +1,13 @@
+# general configs
+projectName : labCollab
+tag : basicModel-biGRU
+# run specific configs
+wandb : True
+lr : 1.0e-4
+num_layers : 2
+pos_weight : 3.0
+fold : 0
+num_gpus : 1
+batch_size : 500
+max_epochs : 1000
+num_workers : 5
