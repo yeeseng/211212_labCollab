@@ -2,9 +2,9 @@
 projectName : labCollab
 tag : basicModel-biGRU
 # run specific configs
-lr : 1.0e-4
+lr : 1.0e-3
 fold : 0
 num_gpus : 1
-batch_size : 500
-max_epochs : 1000
+batch_size : 1000
+max_epochs : 400
 num_workers : 5
