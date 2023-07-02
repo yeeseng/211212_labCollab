@@ -187,20 +187,17 @@ class labCollabDataset(BaseDataset):
         thisSeries = self.dataframe.loc[thisPatientMRN]
 
         if thisSeries.loc['IDA']:
-            diagnosisReelFrame = int(thisSeries.loc['reelFrame'])-random.randint(6,12)
+            startFrame = int(thisSeries.loc['reelFrame'])-random.randint(18,24)
         else:
-            diagnosisReelFrame = random.randint(1,350)-random.randint(6,12)
+            startFrame = random.randint(thisSeries.loc['startNonZero'],338)
 
-        endFrame = max(diagnosisReelFrame,0)
-        startFrame = max(diagnosisReelFrame-12,0)
-        frameLength = endFrame-startFrame
-        offset = 12-frameLength
+        endFrame = startFrame+12
 
         selectedReel = np.zeros((52,12))
 
         patientReel = np.load('Data/lab_data_patientReels/'+str(thisPatientMRN)+'.npy')
         patientReel = np.nan_to_num(patientReel)
-        selectedReel[:, offset:] = patientReel[:,startFrame:endFrame]
+        selectedReel[:,:] = patientReel[:,startFrame:endFrame]
         selectedReel=np.transpose(selectedReel).astype(np.float32)
         GTlabels = np.array([thisSeries.loc['IDA'].astype(np.float16)]) # pytorch lightning like this as a numpy array, size (batch, 1)
 
@@ -214,8 +211,8 @@ class labCollabDM(pl.LightningDataModule):
         super().__init__()
         self.args = args
 
-        self.dataDF = pd.read_csv('Data/Fe_def_outcome_cleanedAndStratified_YN.csv', index_col='mrn')
-        self.dataDF = self.dataDF[self.dataDF['blacklist'] == False]
+        self.dataDF = pd.read_csv('Data/Fe_def_outcome_cleanedAndStratified_YN_230701.csv', index_col='mrn')
+        self.dataDF = self.dataDF[self.dataDF['blacklist2'] == 'False']
 
         # get train list
         trainDF = self.dataDF[self.dataDF['fold'] != self.args.fold]
@@ -246,7 +243,7 @@ if __name__ == "__main__":
     print(pl.__version__)
     torch.set_float32_matmul_precision('medium')
     # load config file
-    with open('110_config.yaml') as file:
+    with open('120_config.yaml') as file:
         defaultConfigDict = yaml.safe_load(file)
 
     parser = argparse.ArgumentParser()
