@@ -27,6 +27,8 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
+from sklearn.metrics import accuracy_score
+
 class BiGRUver2(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super(BiGRUver2, self).__init__()
@@ -38,7 +40,7 @@ class BiGRUver2(nn.Module):
         self.GRU = nn.GRU(
             input_size, hidden_size, num_layers, batch_first=True, bidirectional=True
         )
-        self.linear3 = nn.Linear(self.num_layers * hidden_size * 2, hidden_size)
+        self.linear3 = nn.Linear(hidden_size * 2, hidden_size)
         self.linear4 = nn.Linear(hidden_size, 1)
 
     def forward(self, x):
@@ -207,44 +209,8 @@ class labCollabDataset(BaseDataset):
     def __len__(self):
         return len(self.patientList)
 
-class labCollabDM(pl.LightningDataModule):
-    def __init__(self, args=None):
-        super().__init__()
-        self.args = args
-
-        self.dataDF = pd.read_csv('Data/Fe_def_outcome_cleanedAndStratified_YN_230701.csv', index_col='mrn')
-        self.dataDF = self.dataDF[self.dataDF['blacklist2'] == 'False']
-
-        # get train list
-        trainDF = self.dataDF[self.dataDF['fold'] != self.args.fold]
-        self.trainList = trainDF.index.to_list()
-
-        # get valid list
-        validDF = self.dataDF[self.dataDF['fold'] == self.args.fold]
-        self.validList = validDF.index.to_list()
-
-        self.trainDataset = labCollabDataset(dataframe=self.dataDF, patientList=self.trainList, args=args)
-        self.validDataset = labCollabDataset(dataframe=self.dataDF, patientList=self.validList, args=args)
-
-    def setup(self, stage = None):
-        return
-
-    def train_dataloader(self):
-        trainDataloader = DataLoader(self.trainDataset, batch_size=self.args.batch_size, shuffle=True, num_workers=self.args.num_workers)
-        return trainDataloader
-
-    def val_dataloader(self):
-        validDataloader = DataLoader(self.validDataset, batch_size=self.args.batch_size, shuffle=False, num_workers=self.args.num_workers)
-        return validDataloader
-
-    def test_dataloader(self):
-        return None
-
-if __name__ == "__main__":
-    print(pl.__version__)
-    torch.set_float32_matmul_precision('medium')
-    # load config file
-    with open('120_config.yaml') as file:
+def loadConfig(configPath):
+    with open(configPath) as file:
         defaultConfigDict = yaml.safe_load(file)
 
     parser = argparse.ArgumentParser()
@@ -252,33 +218,44 @@ if __name__ == "__main__":
         parser.add_argument('--' + eachKey, default=eachValue, type=type(eachValue))
 
     args = parser.parse_args()
-    print(args)
+    return args
 
-    # setting up
-    timeStamp = datetime.now().strftime('%y%m%d%H%M')
-    runName = timeStamp + '_' + args.tag + '_cv' + str(args.fold)
-    print(runName)
+if __name__ == "__main__":
+    print(pl.__version__)
+    torch.set_float32_matmul_precision('medium')
 
-    labCollabLightningModule = labCollabLM(args)
-    labCollabDataModule = labCollabDM(args=args)
+    # load config file
+    args = loadConfig('120_config.yaml')
 
-    if args.wandb == True:
-        wandb_logger = WandbLogger(project=args.projectName, name=timeStamp, tags=[args.tag])
-    else:
-        wandb_logger = None
+    myCollabLM = labCollabLM(args)
+    myCollabLM = myCollabLM.load_from_checkpoint('checkpoints/cv5_200epochs.ckpt')
+    myCollabLM = myCollabLM.cuda()
+    myCollabLM = myCollabLM.eval()
+    print(myCollabLM)
 
-    '''
-    checkpoint_callback = ModelCheckpoint(dirpath='checkpoints/' + runName + '/',
-                                          filename=runName + '-{epoch}-{valid_loss_total:.4f}',
-                                          monitor='valid_loss_total',
-                                          save_top_k=100,
-                                          mode='min')
-    '''
+    # create a validation dataset
+    dataDF = pd.read_csv('Data/Fe_def_outcome_cleanedAndStratified_YN_230701.csv', index_col='mrn')
+    dataDF = dataDF[dataDF['blacklist2'] == 'False']
 
-    trainer = pl.Trainer(logger=wandb_logger, log_every_n_steps=10,
-                         accumulate_grad_batches=10,
-                         accelerator='gpu', devices=args.num_gpus, strategy='ddp_find_unused_parameters_false', precision = 16,
-                         #accelerator='ddp', plugins=DDPPlugin(find_unused_parameters=False)],
-                         max_epochs=args.max_epochs, num_sanity_val_steps=10)
-    trainer.fit(labCollabLightningModule, labCollabDataModule)
-    trainer.save_checkpoint('checkpoints/cv5_200epochs.ckpt')
+    # get valid list
+    validDF = dataDF[dataDF['fold'] == args.fold]
+    validList = validDF.index.to_list()
+
+    validDataset = labCollabDataset(dataframe=dataDF, patientList=validList, args=args)
+
+    # inference
+    arrayOfPreds = np.empty(shape = (validDataset.__len__()))
+    arrayOfGTs = np.empty(shape = (validDataset.__len__()))
+    for eachIndex in tqdm.tqdm(range(5)):
+        selectedReel, GTlabels, thisPatientMRN, startFrame = validDataset.__getitem__(eachIndex)
+        print(selectedReel.shape)
+        selectedReel = selectedReel[np.newaxis,:,:]
+        selectedReel = torch.tensor(selectedReel).cuda()
+
+        pred = myCollabLM(selectedReel)
+        pred = torch.sigmoid(pred)
+        pred = pred.detach().cpu().numpy().flatten()
+        arrayOfPreds[eachIndex] = pred[0]
+        arrayOfGTs[eachIndex] = GTlabels[0]
+
+    print(accuracy_score(arrayOfPreds>0.5, arrayOfGTs>0.5))
