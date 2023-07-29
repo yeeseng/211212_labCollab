@@ -3,10 +3,12 @@ projectName : labCollab
 tag : basicModel-biGRU-FirstRoundOptimization
 # run specific configs
 wandb : True
+baseModel : GRU
 lr : 0.001
 num_layers : 2
 pos_weight : 3.0
 fold : 0
+test : 1
 num_gpus : 1
 batch_size : 1000
 max_epochs : 200

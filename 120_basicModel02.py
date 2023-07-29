@@ -216,7 +216,7 @@ class labCollabDM(pl.LightningDataModule):
         self.dataDF = self.dataDF[self.dataDF['blacklist2'] == 'False']
 
         # get train list
-        trainDF = self.dataDF[self.dataDF['fold'] != self.args.fold]
+        trainDF = self.dataDF[(self.dataDF['fold'] != self.args.fold) & (self.dataDF['fold'] != self.args.test)]
         self.trainList = trainDF.index.to_list()
 
         # get valid list
