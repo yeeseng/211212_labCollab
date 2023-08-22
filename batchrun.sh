@@ -1,4 +1,4 @@
-for eachItem in 0 1 2 3 4
+for eachItem in 4 8 16 32 64 128 256
 do
-  python 110_basicModel02.py --fold $eachItem
+  python 130_basicModel03.py --hidden_size $eachItem
 done
