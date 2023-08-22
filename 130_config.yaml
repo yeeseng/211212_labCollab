@@ -2,7 +2,7 @@
 projectName : labCollab
 tag : optimizationRound1-ANN-sweepHiddenSize
 # run specific configs
-wandb : False
+wandb : True
 baseModel : TRANSFORMER # Choices are ANN, GRU, LSTM, TRANSFORMER
 lr : 0.0001 # optimization 1 (0.00001, 0.00003, 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3)
 pos_weight : 3.0 # optimization 2 (0.25, 0.5, 1.0, 2.0, 4.0, 8.0)
