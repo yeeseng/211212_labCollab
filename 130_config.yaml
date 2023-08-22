@@ -1,0 +1,15 @@
+# general configs
+projectName : labCollab
+tag : basicModel-biGRU-FirstRoundOptimization
+# run specific configs
+wandb : False
+baseModel : ANN # Choices are ANN, GRU, LSTM, TRANSFORMER
+lr : 0.001 # optimization 1
+num_layers : 2 # optimization 3
+pos_weight : 3.0 # optimization 2
+fold : 0 # Validation
+test : 1 # for unseen test set
+num_gpus : 1
+batch_size : 1000
+max_epochs : 200
+num_workers : 5
