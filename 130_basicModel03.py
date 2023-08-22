@@ -129,41 +129,45 @@ class TransformerModel(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super(TransformerModel, self).__init__()
         self.hidden_size = hidden_size
+        self.sequence_length = 12
         self.num_layers = num_layers
 
         self.embedding = nn.Linear(input_size, hidden_size)
+
         self.transformer = nn.Transformer(
-            d_model=hidden_size, nhead=4, num_encoder_layers=num_layers
+            d_model=hidden_size, nhead=4, num_encoder_layers=num_layers, num_decoder_layers=num_layers, batch_first=True
         )
-        self.linear = nn.Linear(hidden_size, 1)
+
+        self.linear = nn.Linear(self.sequence_length*hidden_size, 1)
 
     def forward(self, x):
-        batch_size = x.size(0)
+        #batch_size = x.size(0)
         x = self.embedding(x)  # Input embedding
 
         # Transformer expects input shape of (sequence_length, batch_size, hidden_size)
-        x = x.permute(1, 0, 2)
+        #x = x.permute(1, 0, 2)
         transformer_output = self.transformer(x, x)
 
         # Back to original shape (batch_size, sequence_length, hidden_size)
-        transformer_output = transformer_output.permute(1, 0, 2)
+        #transformer_output = transformer_output.permute(1, 0, 2)
+
+        transformer_output = torch.flatten(transformer_output, start_dim=1, end_dim=-1)
 
         studyLevelOutputs = F.relu(self.linear(transformer_output))
 
         return studyLevelOutputs
-
 class labCollabLM(pl.LightningModule):
     def __init__(self, params):
         super().__init__()
         self.save_hyperparameters(params)
         if self.hparams.baseModel == 'GRU':
-            self.mainModel = BiGRUver2(input_size=52, hidden_size=32, num_layers=self.hparams.num_layers)
+            self.mainModel = BiGRUver2(input_size=52, hidden_size=self.hparams.hidden_size, num_layers=self.hparams.num_layers)
         elif self.hparams.baseModel == 'LSTM':
-            self.mainModel = BiLSTM(input_size=52, hidden_size=32, num_layers=self.hparams.num_layers)
+            self.mainModel = BiLSTM(input_size=52, hidden_size=self.hparams.hidden_size, num_layers=self.hparams.num_layers)
         elif self.hparams.baseModel == 'ANN':
-            self.mainModel = simpleANN(input_size=52, hidden_size=32, num_layers=self.hparams.num_layers)
+            self.mainModel = simpleANN(input_size=52, hidden_size=self.hparams.hidden_size, num_layers=self.hparams.num_layers)
         elif self.hparams.baseModel == 'TRANSFORMER':
-            self.mainModel = TransformerModel(input_size=52, hidden_size=32, num_layers=self.hparams.num_layers)
+            self.mainModel = TransformerModel(input_size=52, hidden_size=self.hparams.hidden_size, num_layers=self.hparams.num_layers)
         else:
             raise Exception("Model type is not recognized")
 
@@ -366,4 +370,4 @@ if __name__ == "__main__":
                          #accelerator='ddp', plugins=DDPPlugin(find_unused_parameters=False)],
                          max_epochs=args.max_epochs, num_sanity_val_steps=10)
     trainer.fit(labCollabLightningModule, labCollabDataModule)
-    trainer.save_checkpoint('checkpoints/cv5_200epochs.ckpt')
+    #trainer.save_checkpoint('checkpoints/cv5_200epochs.ckpt')
