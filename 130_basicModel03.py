@@ -352,7 +352,7 @@ if __name__ == "__main__":
     # load config file
     with open('130_config.yaml') as file:
         defaultConfigDict = yaml.safe_load(file)
-        test = args.test  # Retrieve the 'test' parameter from the argparse arguments
+        test = defaultConfigDict.get('test', 1)  # Retrieve testing fold!
 
 
     parser = argparse.ArgumentParser()
