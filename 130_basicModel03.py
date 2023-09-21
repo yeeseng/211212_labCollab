@@ -180,21 +180,6 @@ class labCollabLM(pl.LightningModule):
         self.AUROC = torchmetrics.classification.BinaryAUROC()
         self.learning_rate = self.hparams.lr
         
-         # Calculate TP, TN, false positives, and false negatives
-        true_positives = torch.sum((y_score >= 0.5) & (y_true == 1))
-        true_negatives = torch.sum((y_score < 0.5) & (y_true == 0))
-        false_positives = torch.sum((y_score >= 0.5) & (y_true == 0))
-        false_negatives = torch.sum((y_score < 0.5) & (y_true == 1))
-
-        # Calculate sensitivity and specificity
-        sensitivity = true_positives / (true_positives + false_negatives)
-        specificity = true_negatives / (true_negatives + false_positives)
-
-        # Log and print the results
-        self.log('valid_sensitivity', sensitivity, prog_bar=True, logger=True, sync_dist=True)
-        self.log('valid_specificity', specificity, prog_bar=True, logger=True, sync_dist=True)
-        print("Sensitivity (Sen):", sensitivity)
-        print("Specificity (Spec):", specificity)
 
     def forward(self, x):
         z_class = self.mainModel(x)
@@ -256,6 +241,22 @@ class labCollabLM(pl.LightningModule):
         self.log('valid_class_accuracy', acc_score, prog_bar=True, logger=True, sync_dist=True)
         self.log('valid_class_AUROC', AUROC_score, prog_bar=True, logger=True, sync_dist=True)
         self.saveScores(y_score, y_true, mrn, frame)
+        
+        # Calculate TP, TN, false positives, and false negatives
+        true_positives = torch.sum((y_score >= 0.5) & (y_true == 1))
+        true_negatives = torch.sum((y_score < 0.5) & (y_true == 0))
+        false_positives = torch.sum((y_score >= 0.5) & (y_true == 0))
+        false_negatives = torch.sum((y_score < 0.5) & (y_true == 1))
+
+        # Calculate sensitivity and specificity
+        sensitivity = true_positives / (true_positives + false_negatives)
+        specificity = true_negatives / (true_negatives + false_positives)
+
+        # Log and print the results
+        self.log('valid_sensitivity', sensitivity, prog_bar=True, logger=True, sync_dist=True)
+        self.log('valid_specificity', specificity, prog_bar=True, logger=True, sync_dist=True)
+        print("Sensitivity (Sen):", sensitivity)
+        print("Specificity (Spec):", specificity)
 
         return
 
