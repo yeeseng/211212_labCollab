@@ -351,6 +351,7 @@ if __name__ == "__main__":
     # load config file
     with open('130_config.yaml') as file:
         defaultConfigDict = yaml.safe_load(file)
+        test = defaultConfigDict.get('test', 1)# to retrieve testing set
 
     parser = argparse.ArgumentParser()
     for eachKey, eachValue in defaultConfigDict.items():
