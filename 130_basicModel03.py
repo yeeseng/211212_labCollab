@@ -248,6 +248,15 @@ class labCollabLM(pl.LightningModule):
         false_positives = torch.sum((y_score >= 0.5) & (y_true == 0))
         false_negatives = torch.sum((y_score < 0.5) & (y_true == 1))
 
+        # Calculate precision and recall from TP, FP, and FN
+        precision = true_positives / (true_positives + false_positives)
+        recall = true_positives / (true_positives + false_negatives)
+
+        # Print the results
+        print("Precision:", precision)
+        print("Recall:", recall)
+
+
         # Calculate sensitivity and specificity
         sensitivity = true_positives / (true_positives + false_negatives)
         specificity = true_negatives / (true_negatives + false_positives)
