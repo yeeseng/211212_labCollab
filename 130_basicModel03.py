@@ -256,6 +256,15 @@ class labCollabLM(pl.LightningModule):
         print("Precision:", precision)
         print("Recall:", recall)
 
+        # Calculate NPV and PPV
+        npv = true_negatives / (true_negatives + false_negatives)
+        ppv = true_positives / (true_positives + false_positives)
+
+        # Print the results
+        print("Negative Predictive Value (NPV):", npv)
+        print("Positive Predictive Value (PPV):", ppv)
+
+
 
         # Calculate sensitivity and specificity
         sensitivity = true_positives / (true_positives + false_negatives)
