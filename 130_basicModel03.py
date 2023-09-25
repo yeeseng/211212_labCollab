@@ -261,7 +261,8 @@ class labCollabLM(pl.LightningModule):
         # Calculate NPV and PPV
         npv = true_negatives / (true_negatives + false_negatives)
         ppv = true_positives / (true_positives + false_positives)
-        # Print the results
+        self.log('npv', npv, prog_bar=True, logger=True, sync_dist=True)
+        self.log('ppv', ppv, prog_bar=True, logger=True, sync_dist=True)
         print("Negative Predictive Value (NPV):", npv)
         print("Positive Predictive Value (PPV):", ppv)
 
