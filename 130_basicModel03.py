@@ -135,7 +135,7 @@ class TransformerModel(nn.Module):
         self.embedding = nn.Linear(input_size, hidden_size)
 
         self.transformer = nn.Transformer(
-            d_model=hidden_size, nhead=4, num_encoder_layers=num_layers, num_decoder_layers=num_layers, batch_first=True
+            d_model=hidden_size, nhead=2, num_encoder_layers=num_layers, num_decoder_layers=num_layers, batch_first=True
         )
 
         self.linear = nn.Linear(self.sequence_length*hidden_size, 1)
