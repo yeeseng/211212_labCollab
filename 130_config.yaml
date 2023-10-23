@@ -14,4 +14,4 @@ num_gpus : 1
 batch_size : 500
 max_epochs : 500
 num_workers : 5
-d_model: 256 
+
