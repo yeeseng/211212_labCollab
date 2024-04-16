@@ -20,7 +20,7 @@
 3.  Configure the data module 
 4.  Modify the configuration file **130_config.yaml** to suit your experiment settings (model type, learning rate, batch size, etc.)
 5.  Run the training script:
-
+ ```bash
 python lab_collaborator.py --config_path 130_config.yaml
 
 # Features
