@@ -9,8 +9,8 @@
    git clone https://github.com/your_username/lab_collaborator.git
    cd lab_collaborator
    
-2. Install required dependencies
-    pip install -r requirements.txt
+2. Install required dependencies:
+   pip install -r requirements.txt
 
 
 # Get Started
