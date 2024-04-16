@@ -10,7 +10,8 @@
    cd lab_collaborator
    
 2. Install required dependencies:
-   ```pip install -r requirements.txt
+   ```bash
+   pip install -r requirements.txt
 
 
 # Get Started
