@@ -20,8 +20,7 @@
 3.  Configure the data module 
 4.  Modify the configuration file **130_config.yaml** to suit your experiment settings (model type, learning rate, batch size, etc.)
 5.  Run the training script:
- ```bash
-python lab_collaborator.py --config_path 130_config.yaml
+    python lab_collaborator.py --config_path 130_config.yaml
 
 # Features
 1.  Supports various deep learning models including **BiGRU**, **BiLSTM**, **Transformer**, and **simpleANN**. These classes define the architecture and forward pass logic for various 
